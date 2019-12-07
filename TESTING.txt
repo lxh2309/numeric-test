@@ -1,0 +1,303 @@
+IMPORTANT: The TESTING.txt file contains tables with long rows, which may NOT be properly displayed in Linux terminal. In order to avoid any possible misunderstandings, please check the TESTING file on my github where those tables are correctly displayed. The TESTING file on github is the same with the file submitted.
+The URL is:
+   https://github.com/lxh2309/numeric-test
+
+The program contains the following:
+    numericmy.cpp: main function. It requires an input filename. The commands need to be executed should be written in
+                   the file.
+    function.cpp function.h: Defines Function class to represent input function.
+    expression.cpp expression.h: Defines Expression class and its subclasses to represent operator, variable and constant.
+The program requires one and only one input as filename. It will continue execute the command in the input file unless
+the following situations happen:
+    1. No input file name or more than one file names. (return EXIT_FAILURE)
+    2. The program meets exit command. (return EXIT_SUCCESS)
+To compile the program, run:
+    make
+To run the program, use:
+    ./numeric filename.txt (e.g. ./numeric step1_1.txt)
+
+#Step 1
+    (1) In file step1_1.txt, I wrote some define and test commands. They are all legal. Here is the detail of step1_1.txt:
++───────────────────────────────────────────+──────────────────────────────────────────────+
+| command                                   | output                                       |
++───────────────────────────────────────────+──────────────────────────────────────────────+
+| define (      mod x ) = (% x 2)           | defined mod(x)                               |
+| test (mod 1) 0                            | mod(1) = 0 [INCORRECT: expected 1]           |
+| define (mul x y z     ) = (* x ( / y z))  | defined mul(x y z)                           |
+| test (mul 2 3 1) 6                        | mul(2 3 1) = 6 [correct]                     |
+| define (add x   y z) = (+ (- y z) x)      | defined add(x y z)                           |
+| test (add 2 3 5) 4                        | add(2 3 5) = 4 [INCORRECT: expected 0]       |
+| define (pow x y) = (^ x   y)              | defined pow(x y)                             |
+| test (pow 2 3  ) 8                        | pow(2 3) = 8 [correct]                       |
+| define (abs x) = (select x x (  - 0 x))   | defined abs(x)                               |
+| test (abs -1) 1                           | abs(-1) = 1 [correct]                        |
+| define (Log x y z) = (logb x (+ y z))     | defined Log(x y z)                           |
+| test (Log 16 1 3) 2                       | Log(16 1 3) = 2 [correct]                    |
+| define (FloorCeil x) = ( floor (ceil x))  | defined FloorCeil(x)                         |
+| test (FloorCeil 1.78) 1                   | FloorCeil(1.78) = 1 [INCORRECT: expected 2]  |
+| define (Round x y z) = ( round ( * x y))  | defined Round(x y z)                         |
+| test (Round 2.5 2.5 0) 6                  | Round(2.5 2.5 0) = 6 [correct]               |
+| exit                                      | No output. Program exits                     |
++───────────────────────────────────────────+──────────────────────────────────────────────+
+
+   (2) In file step1_2.txt, there are some illegal define commands.
++───────────────────────────────────────────────────────────────+────────────────────────────────────────────────────────────────────────────────────────────────────────────────+──────────────────+
+| command                                                       | output                                                                                                         | Legal command ?  |
++───────────────────────────────────────────────────────────────+────────────────────────────────────────────────────────────────────────────────────────────────────────────────+──────────────────+
+| define () = (+ 1 2)                                           | Define error: no function name provided.                                                                       | Illegal          |
+| define ( NoParameter ) = (+ 3 1)                              | Define error: function NoParameter has no parameter.                                                           | Illegal          |
+| define ( NoRightParentheses x = (% x 2)                       | Expected ) but found x                                                                                         | Illegal          |
+| define (NoEqual x y)  (* ( + x 2) y)                          | Illegal define: no = found                                                                                     | Illegal          |
+| define NoLeftParentheses x = (- x 1)                          | Expected ( but found NoLeftParentheses                                                                         | Illegal          |
+| define (UndeclaredVar x) = (* x y)                            | Undeclared variable: y. Define fails                                                                           | Illegal          |
+| Define (WrongDefine x) = (+ 1 x)                              | Error: Unknown command                                                                                         | Illegal          |
+| define NoParentheses x = (* x 2)                              | Expected ( but found NoParentheses                                                                             | Illegal          |
+| define (NoOperator x y) = ( x y)                              | Define error: operator x is not defined.                                                                       | Illegal          |
+| define (DefineTwice x y z) = (+(- x y) z)                     | defined DefineTwice(x y z)                                                                                     | Legal            |
+| define (DefineTwice a b) = (% a b)                            | Define error: function DefineTwice has been defined.                                                           | Illegal          |
+| define (NoLeftParenthesesExpression x z) = logb x z)          | Undeclared variable: logb. Define fails                                                                        | Illegal          |
+| define (NoRightParenthesesExpression x1 z1) = (/ (+ x1 2) z1  | Define warning: extra parameters found. The program will ignore parameter 1 and continue.Expected ) but found  | Illegal          |
+| exit                                                          | No output. The program exits.                                                                                  |                  |
++───────────────────────────────────────────────────────────────+────────────────────────────────────────────────────────────────────────────────────────────────────────────────+──────────────────+
+
+   (3) Here are some tricky define testing cases in step1_3.txt:
++─────────────────────────────────────────────+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+────────────+
+| command                                     | output                                                                                                                                      | Is legal?  |
++─────────────────────────────────────────────+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+────────────+
+| define ( ExtraStrEnd z) = (* 2 z) s         | Define warning: extra parameters found. The program will ignore parameter s and continue.                                                   | Yes        |
+| define ( ExtraStrLeft x y ) w = (* x y)     | Define warning: extra parameters found. The program will ignore parameters starting from w until = and continue. defined ExtraStrLeft(x y)  | Yes        |
+| define ( ExtraStrRight x) = z (+ 0 x)       | Undeclared variable: z. Define fails                                                                                                        | No         |
+| define wired (ExtraStrStart a b) = (+ a b)  | Expected ( but found wired                                                                                                                  | No         |
+| exit                                        | No output. The program exits.                                                                                                               |            |
++─────────────────────────────────────────────+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+────────────+
+For command 1, I consider it as a legal. The right hand side of equation gives enough valid infomation for the function. Therefore, a function cound be defined but the program will give a warning for the extra input (possibly by mistake) s.
+For command 2, similar with the above example. Before w, program has received enough infomation about the function. So I think the command is vaild, but the program will give a warning about extra input w.
+For command 3 and 4, mistakes appear before the program could infer the whole function will be treated as error.
+
+   (4) File step1_4.txt contains some legal test commands:
++──────────────────────────────────────────────────+───────────────────────────────────────────────────────────────+
+| command                                          | output                                                        |
++──────────────────────────────────────────────────+───────────────────────────────────────────────────────────────+
+| define (f x y) = (* x y)                         | defined f(x y)                                                |
+| define (g z) = (+ 1 z)                           | defined g(z)                                                  |
+| define (h a b c) = ( % ( / a b) (^ 2 c))         | defined h(a b c)                                              |
+| define (k  x m) = (floor ( logb x ( + m 1))   )  | defined k(m x)                                                |
+| define (abs x) = (select x x (- 0 x))            | defined abs(x)                                                |
+| test (        f  1 1        )           2        | f(1 1) = 2 [INCORRECT: expected 1]                            |
+| test (h 3 1 3) 3                                 | h(3 1 3) = 3 [correct]                                        |
+| test (        k 16 1) 4                          | k(16 1) = 4 [correct]                                         |
+| test ( f 2 ( g ( abs  -3 ) )) 9                  | f(2 g(abs(-3))) = 9 [INCORRECT: expected 8]                   |
+| test (h ( f  2 ( k 27 2)) (abs -3) (h 3 1 1)) 3  | h(f(2 k(27 2)) abs(-3) h(3 1 1)) = 3 [INCORRECT: expected 0]  |
+| exit                                             | No output. The program exits.                                 |
++──────────────────────────────────────────────────+───────────────────────────────────────────────────────────────+
+
+   (5) In file step1_5.txt, I wrote some illegal test commands:
++──────────────────────────────────────────────────+────────────────────────────────────────────────+
+| command                                          | output                                         |
++──────────────────────────────────────────────────+────────────────────────────────────────────────+
+| define (f x y) = (* x y)                         | defined f(x y)                                 |
+| define (g z) = (+ 1 z)                           | defined g(z)                                   |
+| define (h a b c) = ( % ( / a b) (^ 2 c))         | defined h(a b c)                               |
+| define (k  x m) = (floor ( logb x ( + m 1))   )  | defined k(m x)                                 |
+| define (abs x) = (select x x (- 0 x))            | defined abs(x)                                 |
+| define (div x y) = (/ x y)                       | defined div(x y)                               |
+| define (mod x y) = ( % x y)                      | defined mod(x y)                               |
+| define (pow x y) = ( ^ x y)                      | defined pow(x y)                               |
+| define (log x y) = (logb x y)                    | defined log(x y)                               |
+| test (NotDefined  1 3) 2                         | Test error: NotDefined is not defined          |
+| test f  1 1)    2                                | Test error: expect ( but f found               |
+| test (f  1 1    2                                | Test error: expect ) but 2 found               |
+| test ( 1 1) 2                                    | Test error: 1 is not defined                   |
+| test ( f NotNumber 1) 2                          | Test error: NotNumber is not a number          |
+| test (f 1 1) NotNumber                           | Test error: expect a number, but not found.    |
+| test (div 5 0) 2                                 | Running Error: divided by zero.                |
+| test (mod 3 0) 3                                 | Running Error: divided by zero.                |
+| test (pow 0 0) 1                                 | Running Error: power error.                    |
+| test (log -3 2) 2                                | Running Error: Illegal log number.             |
+| test (log 0 0) 1                                 | Running Error: Illegal log number.             |
+| test (h 3 1 3)                                   | Test error: expect a number, but not found.    |
+| test (k 16) 4                                    | Test error: Not enough value provided.         |
+| test (h ( 1 2)) 23                               | Test error: 1 is not defined                   |
+| test ( f 2 ( g ( abs  -3 ))9                     | Test error: expect ) but 9 found               |
+| test ( f 2 ( g   abs  -3 )) 9                    | Test error: abs is not a number                |
+| exit                                             | No output. The program exits.                  |
++──────────────────────────────────────────────────+────────────────────────────────────────────────+
+Note the last two test commands miss ) and ( respectively.
+
+   (6)Again, there are some tricky test commands in step1_6.txt:
++───────────────────────────+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+
+| command                   | output                                                                                                                          |
++───────────────────────────+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+
+| define (f x y) = (* x y)  | defined f(x y)                                                                                                                  |
+| test ( f 2 1) 2 3         | Test warning: extra parameters found. The program will ignore parameters starting from 3 and continue.  f(2 1) 2 = 2 [correct]  |
+| test 3 ( f  2 1) 2        | Test error: expect ( but 3 found                                                                                                |
+| exit                      | No output. The program exits.                                                                                                   |
++───────────────────────────+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+
+For test command 1, I think it is legal. (Again, it gives enough valid infomation for testing. But the program will give a warning for extra 3 found.)
+For test command 2, I think it is illegal. (Again, mistakes happen before getting enough information for testing.)
+
+#Step 2
+   Since the number of parameters in the function is unknown, the numint is executed recursively.
+   (1) File step2_1.txt is used for testing legal numint commands.
++───────────────────────────────────────────────────────────────────+───────────────────────────────────────────+
+| command                                                           | output                                    |
++───────────────────────────────────────────────────────────────────+───────────────────────────────────────────+
+| define (f x y) = (+ (* 2 x) y)                                    | defined f(x y)                            |
+| define (g x) = (+ 2 1)                                            | defined g(x)                              |
+| define (h x y z)  = ( + x (- y z))                                | defined h(x y z)                          |
+| define (i a b c d ) = (+ (- a b) (+ c d))                         | defined i(a b c d)                        |
+| define (k a b c d e) = (- a (+ b (* c (/ d e))))                  | defined k(a b c d e f g h)                |
+| numint f 0.001 -1 1 4 5                                           | Numerical integration result is 9         |
+| numint g 0.01 -2 2                                                | Numerical integration result is 12        |
+| numint h 0.01 -0.5 0.5 1 2 2 3                                    | Numerical integration result is -1.01505  |
+| numint i 0.1 1 2 3 4 5 6 7 8                                      | Numerical integration result is 13.431    |
+| numint k 0.05 1 2 3 4 5 6 7 8 9 10                                | Numerical integration result is -7.41511  |
+| exit                                                              | No output. The program exits.             |
++───────────────────────────────────────────────────────────────────+───────────────────────────────────────────+
+
+   (2) The next step is to test with illegal test commands. This time we are using file step2_2.txt:
++─────────────────────────────────────+──────────────────────────────────────────────────────────────────+
+| command                             | output                                                           |
++─────────────────────────────────────+──────────────────────────────────────────────────────────────────+
+| define (f x y) = (+ (* 2 x) y)      | defined f(x y)                                                   |
+| define (g x) = (+ 2 1)              | defined g(x)                                                     |
+| define (h x y z)  = ( + x (- y z))  | defined h(x y z)                                                 |
+| numint NotDefined 0.01 1 2          | Numint error: NotDefined is not defined                          |
+| numint f 0.01 2 1 3 4               | Numint error: lower bound is greater or equal than upper bound.  |
+| numint g 0.01 1                     | Numint error: g expects 1 range pairs but found 0 pairs          |
+| numint                              | Numint error:  is not defined                                    |
+| numint h 0.01 2 3 5 6               | Numint error: h expects 3 range pairs but found 2 pairs          |
+| numint f NotNumber 1 2 3 4          | Numint error: expect a positive step but found NotNumber.        |
+| numint f 0.01  1 NotNumber 3 4      | Numint error: expect a number but not found.                     |
+| numint f -0.01 1 2 3 4              | Numint error: expect a positive step but found -0.01.            |
+| numint f 0 1 2 3 4                  | Numint error: step size cannot be zero                           |
+| exit                                | No output. The program exits.                                    |
++─────────────────────────────────────+──────────────────────────────────────────────────────────────────+
+   (3) The final step is to test some tricky numint example. Following the same rule as before, I consider mistakes happen before given enough information is illegal. However, if program could infer enough information from the input, it will ignore extra parameters.
+step2_3.txt contains details about this step.
++─────────────────────────────────+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+
+| command                         | output                                                                                                                                            |
++─────────────────────────────────+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+
+| define (f x y) = (+ (* 2 x) y)  | defined f(x y)                                                                                                                                    |
+| numint f 0.01 1 2 3 4 5         | Numint warning: extra parameters found. The program will ignore parameters starting from 5 and continue. Numerical integration result is 6.57005  |
+| numint 5 f 0.01 1 2 3 4         | Numint error: 5 is not defined                                                                                                                    |
+| numint f 2 1 2 3 4              | Numerical integration result is 32                                                                                                                |
+| exit                            | No output. The program exit.                                                                                                                      |
+|                                 |                                                                                                                                                   |
++─────────────────────────────────+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+
+Note the last numint command is legal though step size is larger than range. In this case, the program will only calculate once at the lower bound.
+
+#Step 3
+   This part is used to test mcint command.
+   (1) File step3_1.txt is used for testing legal mcint commands:
++───────────────────────────────────────────────────+──────────────────────────────────────────────+
+| command                                           | output                                       |
++───────────────────────────────────────────────────+──────────────────────────────────────────────+
+| define (f x y) = (+ (* 2 x) y)                    | defined f(x y)                               |
+| define (g x) = (+ 2 1)                            | defined g(x)                                 |
+| define (h x y z)  = ( + x (- y z))                | defined h(x y z)                             |
+| define (i a b c d ) = (+ (- a b) (+ c d))         | defined i(a b c d)                           |
+| define (k a b c d e) = (- a (+ b (* c (/ d e))))  | defined k(a b c d e)                         |
+| mcint f 5000 -1 1 4 5                             | Monte Carlo integration result is 9.81618    |
+| mcint g 9000 -2 2                                 | Monte Carlo integration result is 12         |
+| mcint h 70000 -0.5 0.5 1 2 2 3                    | Monte Carlo integration result is -0.918382  |
+| mcint i 55000 1 2 3 4 5 6 7 8                     | Monte Carlo integration result is 11.6181    |
+| mcint k 300000 1 2 3 4 5 6 7 8 9 10               | Monte Carlo integration result is -6.44128   |
+| exit                                              | No output. The program exits.                |
++───────────────────────────────────────────────────+──────────────────────────────────────────────+
+Note you may not get the same result (since Monte Carlo Integration uses random numbers).
+
+   (2) Here are some illegal mcint commands in file step3_2.txt:
++─────────────────────────────────────+─────────────────────────────────────────────────────────────────────+
+| command                             | output                                                              |
++─────────────────────────────────────+─────────────────────────────────────────────────────────────────────+
+| define (f x y) = (+ (* 2 x) y)      | defined f(x y)                                                      |
+| define (g x) = (+ 2 1)              | defined g(x)                                                        |
+| define (h x y z)  = ( + x (- y z))  | defined h(x y z)                                                    |
+| mcint NotDefined 0.01 1 2           | Mcint error: NotDefined is not defined                              |
+| mcint f 1000 2 1 3 4                | Mcint error: lower bound is greater or equal than upper bound.      |
+| mcint g 2000 1                      | Mcint error: g expects 1 range pairs but found 0 pairs              |
+| mcint                               | Mcint error:  is not defined                                        |
+| mcint h 3000 2 3 5 6                | Mcint error: h expects 3 range pairs but found 2 pairs              |
+| mcint h 3500 2 3 5 6 7              | Mcint error: h expects 3 range pairs but found 2 pairs              |
+| mcint f NotNumber 1 2 3 4           | Mcint error: expect a positive N but found 0 .                      |
+| mcint f 1000  1 NotNumber 3 4       | Mcint error: expect a number but not found.                         |
+| mcint f -100 1 2 3 4                | Mcint error: expect a positive N but found -100 .                   |
+| mcint f 0 1 2 3 4                   | Mcint error: number of trials cannot be zero                        |
+| mcint f 100.5 1 2 3 4               | Mcint error: expect number of trials be an integer but found 100.5  |
+| exit                                | No output. The program exits.                                       |
++─────────────────────────────────────+─────────────────────────────────────────────────────────────────────+
+
+   (3) File step3_3.txt is for some tricky cases:
++─────────────────────────────────+────────────────────────────────────────────+
+| command                         | output                                     |
++─────────────────────────────────+────────────────────────────────────────────+
+| define (f x y) = (+ (* 2 x) y)  | defined f(x y)                             |
+| mcint f 5000 1 2 3 4 5          | Monte Carlo integration result is 6.23837  |
+| mcint 5 f 1000 1 2 3 4          | Mcint error: 5 is not defined              |
+| exit                            | No output. The program exits.              |
++─────────────────────────────────+────────────────────────────────────────────+
+Again, extra parameters will lead to a warning.
+
+#Step 4
+   (1) This part covers the legal cases for min and max commands (in file step4_1.txt):
++───────────────────────────────────────────────────────────+─────────────────────────────────────────────────────────────+
+| command                                                   | output                                                      |
++───────────────────────────────────────────────────────────+─────────────────────────────────────────────────────────────+
+| define (f x y) = (+ (^ x 2) (- (^ y 2) (+ (* 4 x) 1)))    | defined f(x y)                                              |
+| define (g x y) = (+ ( * -1 (^ x 2)) (- (* 2 y) (^ y 2)))  | defined g(x y)                                              |
+| define (h x y z) = ( + ( ^ x 2) (+ (^ y 2) (^ z 2)))      | defined h(x y z)                                            |
+| define (t x) = ( - (* 2 x) ( + -1 (* x x)))               | defined t(x)                                                |
+| min f 0.1 0.0001 3 3 1000                                 | Optimize result is (2.00036, 0.000621477)                   |
+| max g 0.1 0.0005 5 5 2000                                 | Optimize result is (0.00162606, 1.00129)                    |
+| min h 0.1 0.0001 6 6 6 3000                               | Optimize result is (0.000261339, 0.000261468, 0.000261468)  |
+| max t 0.05 0.0002 -5 5000                                 | Optimize result is (0.998016)                               |
+| exit                                                      | No output. The program exits.                               |
++───────────────────────────────────────────────────────────+─────────────────────────────────────────────────────────────+
+
+   (2)This part is for illegal min or max command wrote in file step4_2.txt:
++───────────────────────────────────────────────────────────+────────────────────────────────────────────────────────────────────────────────────+
+| command                                                   | output                                                                             |
++───────────────────────────────────────────────────────────+────────────────────────────────────────────────────────────────────────────────────+
+| define (f x y) = (+ (^ x 2) (- (^ y 2) (+ (* 4 x) 1)))    | defined f(x y)                                                                     |
+| define (g x y) = (+ ( * -1 (^ x 2)) (- (* 2 y) (^ y 2)))  | defined g(x y)                                                                     |
+| define (h x y z) = ( + ( ^ x 2) (+ (^ y 2) (^ z 2)))      | defined h(x y z)                                                                   |
+| define (t x) = ( - (* 2 x) ( + -1 (* x x)))               | defined t(x)                                                                       |
+| min NotDefined 0.1 0.0005 5 5 2000                        | Max or Min error: NotDefined is not defined                                        |
+| min f 0.1 0.0001 3 3                                      | Max or Min error: not enough parameters.                                           |
+| max g NotNumber 0.0005 5 5 2000                           | Max or Min error: gamma expects a number, but not found.                           |
+| max g 0.1 NotNumber 5 5 2000                              | Max or Min error: convergedDistance expects a number, but not found.               |
+| max g 0.1 0.0005 5 NotNumber 2000                         | Max or Min error: start point expects a number, but not found.                     |
+| max g 0.1 0.0005 5 5 NotNumber                            | Max or Min error: max step expects a positive number, but not found.               |
+| max g -0.1 0.0005 5 5 2000                                | Max or Min error: gamma expects a positive number, but found -0.1 .                |
+| max g 0.1 -1 5 5 2000                                     | Max or Min error: convergedDistance expects a non-negative number, but found -1 .  |
+| max g 0.1 0.0005 5 5 2000.25                              | Max or Min error: expect max step number be an integer, but found 2000.25          |
+| max g -0.1 0.0005 5 5 -1000                               | Max or Min error: gamma expects a positive number, but found -0.1 .                |
+| min h 0.1 0.0001 6 6                                      | Max or Min error: not enough parameters.                                           |
+| max t 0.05 0.0002 -5 0                                    | Max or Min error: expect a positive max step, but found 0 .                        |
+| max t 0 0.0002 -5 1000                                    | Max or Min error: gamma expects a positive number, but found 0 .                   |
+| exit                                                      | No output. The program exits.                                                      |
++───────────────────────────────────────────────────────────+────────────────────────────────────────────────────────────────────────────────────+
+
+   (3) If user enter extra parameters, the program will give a warning and continue. Note this kind of extra can only happen at the end of the command, or the program will give an error. This is the same method we used before.
+Test cases is in file step4_3.txt:
++─────────────────────────────────────────────────────────+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+
+| command                                                 | output                                                                                                                                                  |
++─────────────────────────────────────────────────────────+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+
+| define (f x y) = (+ (^ x 2) (- (^ y 2) (+ (* 4 x) 1)))  | defined f(x y)                                                                                                                                          |
+| min f 0.1 0.0001 3 3 1000 5                             | Max or Min warning: extra parameters found. The program will ignore parameters starting from 5 and continue. Optimize result is (2.00036, 0.000621477)  |
+| min 5 f 0.1 0.0001 3 3 1000                             | Max or Min error: 5 is not defined                                                                                                                      |
+| exit                                                    | No output. The program exits.                                                                                                                           |
++─────────────────────────────────────────────────────────+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+
+
+#step 5
+   For unknown command, the program will gives an error. (see step5.txt)
++─────────────────────────────────────────────────────────+────────────────────────────────+
+| command                                                 | output                         |
++─────────────────────────────────────────────────────────+────────────────────────────────+
+| define (f x y) = (+ (^ x 2) (- (^ y 2) (+ (* 4 x) 1)))  | defined f(x y)                 |
+| unk                                                     | Error: Unknown command         |
+|                                                         | Error: Unknown command         |
+| abc 1 2 3 4 5                                           | Error: Unknown command         |
+| exit                                                    | No output. The program exits.  |
++─────────────────────────────────────────────────────────+────────────────────────────────+
